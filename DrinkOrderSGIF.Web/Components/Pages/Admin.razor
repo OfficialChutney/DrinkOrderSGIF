@@ -1,0 +1,32 @@
+@page "/admin"
+@inherits AdminPageBase
+
+<PageTitle>Admin</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Admin</h1>
+
+    <div class="admin-grid">
+        <a class="admin-card" href="/admin/teams">
+            <h2>Teams</h2>
+            <p>Add or remove teams available to order.</p>
+        </a>
+        <a class="admin-card" href="/admin/drinks">
+            <h2>Drinks</h2>
+            <p>Manage drink options for ordering.</p>
+        </a>
+        <a class="admin-card" href="/admin/orders">
+            <h2>Orders</h2>
+            <p>See active orders and mark them complete.</p>
+        </a>
+        <a class="admin-card" href="/admin/stats">
+            <h2>Stats</h2>
+            <p>Review totals by team and by drink.</p>
+        </a>
+    </div>
+}

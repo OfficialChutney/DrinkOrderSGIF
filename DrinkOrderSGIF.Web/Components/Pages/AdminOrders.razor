@@ -1,0 +1,106 @@
+@page "/admin/orders"
+@inherits AdminPageBase
+@implements IAsyncDisposable
+
+@using OrderEntity = DrinkOrderSGIF.Domain.Entities.Order
+
+@inject IOrderService OrderService
+@inject NavigationManager Navigation
+
+@using Microsoft.AspNetCore.SignalR.Client
+
+<PageTitle>Orders</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Pending Orders</h1>
+
+    @if (_orders.Count == 0)
+    {
+        <p>No pending orders.</p>
+    }
+    else
+    {
+        <div class="order-list">
+            @foreach (var order in _orders)
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <strong>@order.TeamName</strong>
+                            <div class="order-subtitle">@order.CreatedAt.ToLocalTime().ToString("g")</div>
+                        </div>
+                        <button class="order-button" @onclick="() => CompleteOrder(order.Id)">Order Complete</button>
+                    </div>
+                    <div class="order-items">
+                        @foreach (var item in order.Items.OrderBy(i => i.DrinkName))
+                        {
+                            <div class="order-item-row">
+                                <span>@item.DrinkName</span>
+                                <span>@item.Quantity</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<OrderEntity> _orders = Array.Empty<OrderEntity>();
+    private HubConnection? _hubConnection;
+    private bool _loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _loaded)
+        {
+            return;
+        }
+
+        if (!await EnsureAuthorizedAsync())
+        {
+            return;
+        }
+
+        _loaded = true;
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/orderHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<Guid>("orders-changed", async _ =>
+        {
+            await LoadOrdersAsync();
+            await InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+        await LoadOrdersAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadOrdersAsync()
+    {
+        _orders = await OrderService.GetPendingOrdersAsync();
+    }
+
+    private async Task CompleteOrder(Guid orderId)
+    {
+        await OrderService.CompleteOrderAsync(orderId);
+        await LoadOrdersAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

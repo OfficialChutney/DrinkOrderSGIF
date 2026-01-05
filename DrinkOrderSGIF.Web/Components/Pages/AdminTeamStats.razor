@@ -1,0 +1,88 @@
+@page "/admin/stats/teams"
+@inherits AdminPageBase
+
+@inject IStatsService StatsService
+@inject NavigationManager Navigation
+
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+
+<PageTitle>Team Stats</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Teams</h1>
+
+    @if (_summaries.Count == 0)
+    {
+        <p>No orders have been placed yet.</p>
+    }
+    else
+    {
+        <div class="admin-list">
+            @foreach (var summary in _summaries)
+            {
+                <div class="admin-row">
+                    <div>
+                        <strong>@summary.TeamName</strong>
+                        <div class="order-subtitle">@summary.OrderCount orders, @summary.TotalDrinks drinks</div>
+                    </div>
+                    <a class="secondary-button" href="/admin/stats/teams/@summary.TeamId">View Drinks</a>
+                </div>
+            }
+            <div class="admin-row">
+                <strong>Total</strong>
+                <span>@TotalTeamDrinks drinks across @TotalOrders orders</span>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<TeamSummary> _summaries = Array.Empty<TeamSummary>();
+    private int TotalTeamDrinks => _summaries.Sum(summary => summary.TotalDrinks);
+    private int TotalOrders => _summaries.Sum(summary => summary.OrderCount);
+    private HubConnection? _hubConnection;
+    private bool _loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _loaded)
+        {
+            return;
+        }
+
+        if (!await EnsureAuthorizedAsync())
+        {
+            return;
+        }
+
+        _loaded = true;
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/orderHub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        _hubConnection.On<Guid>("orders-changed", async _ =>
+        {
+            _summaries = await StatsService.GetTeamSummariesAsync();
+            await InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+        _summaries = await StatsService.GetTeamSummariesAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

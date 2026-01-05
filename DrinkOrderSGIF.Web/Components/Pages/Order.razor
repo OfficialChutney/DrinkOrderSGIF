@@ -1,0 +1,89 @@
+@page "/order/{TeamId:guid}"
+
+@inject ITeamService TeamService
+@inject IDrinkService DrinkService
+@inject OrderDraftState DraftState
+@inject NavigationManager Navigation
+
+<PageTitle>Order Drinks</PageTitle>
+
+@if (_team is null)
+{
+    <p>That team could not be found. Please return to the home page.</p>
+}
+else
+{
+    <h1>Order for @_team.Name</h1>
+
+    @if (_drinks.Count == 0)
+    {
+        <p>No drinks are available right now.</p>
+    }
+    else
+    {
+        <div class="drink-list">
+            @foreach (var drink in _drinks)
+            {
+                var quantity = DraftState.GetQuantity(drink.Id);
+                <div class="drink-row">
+                    <div>
+                        <div class="drink-name">@drink.Name</div>
+                        <div class="order-subtitle">@drink.Price Klip(s)</div>
+                    </div>
+                    <div class="drink-controls">
+                        <button class="qty-button" @onclick="() => Decrement(drink.Id)">-</button>
+                        <span class="qty-value">@quantity</span>
+                        <button class="qty-button" @onclick="() => Increment(drink)">+</button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="order-actions">
+            <span>Total drinks: @TotalItems</span>
+            <span>Total: @DraftState.TotalPrice Klip(s)</span>
+            <button class="order-button" disabled="@(_team is null || TotalItems == 0)" @onclick="GoToReview">
+                Review Order
+            </button>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid TeamId { get; set; }
+
+    private Team? _team;
+    private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
+
+    private int TotalItems => DraftState.Items.Sum(item => item.Quantity);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _team = await TeamService.GetTeamByIdAsync(TeamId);
+        if (_team is not null && _team.IsActive)
+        {
+            DraftState.SetTeam(_team.Id, _team.Name);
+            _drinks = await DrinkService.GetActiveDrinksAsync();
+        }
+        else
+        {
+            _team = null;
+        }
+    }
+
+    private void Increment(Drink drink)
+    {
+        DraftState.Increment(drink.Id, drink.Name, drink.Price);
+    }
+
+    private void Decrement(Guid drinkId)
+    {
+        DraftState.Decrement(drinkId);
+    }
+
+    private void GoToReview()
+    {
+        Navigation.NavigateTo("/order/review");
+    }
+}

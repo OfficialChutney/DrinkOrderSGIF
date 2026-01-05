@@ -1,0 +1,24 @@
+@page "/admin/stats"
+@inherits AdminPageBase
+
+<PageTitle>Stats</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Order Stats</h1>
+
+    <div class="admin-grid">
+        <a class="admin-card" href="/admin/stats/teams">
+            <h2>By Team</h2>
+            <p>View totals for each team and drill into their drink mix.</p>
+        </a>
+        <a class="admin-card" href="/admin/stats/drinks">
+            <h2>By Drink</h2>
+            <p>See total drinks ordered across all teams.</p>
+        </a>
+    </div>
+}

@@ -1,5 +1,8 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    background: linear-gradient(140deg, #f8f3ea 0%, #eef4f8 55%, #f2f8f1 100%);
+    color: #1c2b2f;
+    min-height: 100%;
 }
 
 a, .btn-link {
@@ -18,6 +21,175 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+}
+
+.team-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-top: 1.5rem;
+}
+
+.team-button {
+    background: #153a4f;
+    color: #f8f3ea;
+    border: none;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+}
+
+.team-button:hover {
+    background: #1f516b;
+}
+
+.drink-list,
+.review-list,
+.admin-list,
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+}
+
+.drink-row,
+.review-row,
+.admin-row,
+.order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(28, 43, 47, 0.08);
+}
+
+.drink-name {
+    font-weight: 600;
+}
+
+.drink-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.qty-button {
+    background: #f0a04b;
+    color: #1c2b2f;
+    border: none;
+    padding: 0.2rem 0.7rem;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.qty-value {
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.order-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.order-button {
+    background: #2a7d6f;
+    color: #f8f3ea;
+    border: none;
+    padding: 0.6rem 1.3rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.order-button:disabled {
+    opacity: 0.5;
+}
+
+.secondary-button {
+    background: #f0ece4;
+    color: #1c2b2f;
+    border: 1px solid #d8d2c6;
+    padding: 0.4rem 1rem;
+    border-radius: 10px;
+}
+
+.admin-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-top: 1.5rem;
+}
+
+.admin-card {
+    display: block;
+    text-decoration: none;
+    background: #ffffff;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    color: inherit;
+    box-shadow: 0 8px 18px rgba(28, 43, 47, 0.1);
+}
+
+.admin-form {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.admin-form input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #d5d0c7;
+}
+
+.status-tag {
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    color: #5b6b73;
+}
+
+.order-card {
+    background: #ffffff;
+    padding: 1rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(28, 43, 47, 0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.order-subtitle {
+    font-size: 0.85rem;
+    color: #5b6b73;
+}
+
+.confirm-panel {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fff6ea;
+    border-radius: 14px;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+}
+
+.error-text {
+    margin-top: 0.8rem;
+    color: #b21f2d;
 }
 
 h1:focus {

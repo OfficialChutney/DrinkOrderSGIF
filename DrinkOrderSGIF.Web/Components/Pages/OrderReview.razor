@@ -1,0 +1,81 @@
+@page "/order/review"
+
+@inject IOrderService OrderService
+@inject OrderDraftState DraftState
+@inject NavigationManager Navigation
+
+<PageTitle>Review Order</PageTitle>
+
+@if (_submitted)
+{
+    <h1>Order Confirmed</h1>
+    <p>Your drinks are on the way.</p>
+    <button class="order-button" @onclick="ReturnHome">Back to Teams</button>
+}
+else if (DraftState.TeamId is null || DraftState.Items.Count == 0)
+{
+    <p>No drinks are in your order yet.</p>
+    <button class="order-button" @onclick="ReturnHome">Back to Teams</button>
+}
+else
+{
+    <h1>Review Order for @DraftState.TeamName</h1>
+
+    <div class="review-list">
+        @foreach (var item in DraftState.Items)
+        {
+            <div class="review-row">
+                <span>@item.DrinkName</span>
+                <span>@item.Quantity x @item.Price Klip(s)</span>
+            </div>
+        }
+    </div>
+
+    <div class="order-actions">
+        <span>Total drinks: @TotalItems</span>
+        <span>Total: @DraftState.TotalPrice Klip(s)</span>
+        <button class="order-button" @onclick="PlaceOrder">Place Order</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <p class="error-text">@_error</p>
+    }
+}
+
+@code {
+    private bool _submitted;
+    private string? _error;
+
+    private int TotalItems => DraftState.Items.Sum(item => item.Quantity);
+
+    private async Task PlaceOrder()
+    {
+        if (DraftState.TeamId is null)
+        {
+            return;
+        }
+
+        _error = null;
+
+        try
+        {
+            var request = new OrderRequest(
+                DraftState.TeamId.Value,
+                DraftState.Items.Select(item => new OrderItemRequest(item.DrinkId, item.Quantity)).ToList());
+            await OrderService.CreateOrderAsync(request);
+            DraftState.Clear();
+            _submitted = true;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private void ReturnHome()
+    {
+        DraftState.Clear();
+        Navigation.NavigateTo("/");
+    }
+}

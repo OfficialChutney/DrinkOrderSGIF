@@ -1,0 +1,79 @@
+@page "/admin/teams"
+@inherits AdminPageBase
+
+@inject ITeamService TeamService
+
+<PageTitle>Manage Teams</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Teams</h1>
+
+    <div class="admin-form">
+        <input placeholder="New team name" @bind="_newTeamName" />
+        <button class="order-button" @onclick="AddTeam">Add Team</button>
+    </div>
+
+    @if (_teams.Count == 0)
+    {
+        <p>No teams yet.</p>
+    }
+    else
+    {
+        <div class="admin-list">
+            @foreach (var team in _teams)
+            {
+                <div class="admin-row">
+                    <div>
+                        <strong>@team.Name</strong>
+                        <span class="status-tag">@((team.IsActive) ? "Active" : "Inactive")</span>
+                    </div>
+                    <button class="secondary-button" @onclick="() => ToggleTeam(team)">
+                        @(team.IsActive ? "Remove" : "Restore")
+                    </button>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private string _newTeamName = string.Empty;
+    private IReadOnlyList<Team> _teams = Array.Empty<Team>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && await EnsureAuthorizedAsync())
+        {
+            await LoadTeamsAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadTeamsAsync()
+    {
+        _teams = await TeamService.GetAllTeamsAsync();
+    }
+
+    private async Task AddTeam()
+    {
+        if (string.IsNullOrWhiteSpace(_newTeamName))
+        {
+            return;
+        }
+
+        await TeamService.AddTeamAsync(_newTeamName);
+        _newTeamName = string.Empty;
+        await LoadTeamsAsync();
+    }
+
+    private async Task ToggleTeam(Team team)
+    {
+        await TeamService.SetTeamActiveAsync(team.Id, !team.IsActive);
+        await LoadTeamsAsync();
+    }
+}

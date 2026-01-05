@@ -1,0 +1,45 @@
+@page "/admin/login"
+
+@inject AdminAuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Login</PageTitle>
+
+<h1>Admin Login</h1>
+
+<EditForm class="admin-form" Model="@this" OnSubmit="LoginAsync">
+    <input type="password" placeholder="Password" @bind="_password" />
+    <button class="order-button" type="submit">Log In</button>
+</EditForm>
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <p class="error-text">@_error</p>
+}
+
+@code {
+    private string _password = string.Empty;
+    private string? _error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && await AuthService.IsAuthenticatedAsync())
+        {
+            Navigation.NavigateTo("/admin");
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        _error = null;
+
+        if (!await AuthService.TryLoginAsync(_password))
+        {
+            _error = "Incorrect password.";
+            return;
+        }
+
+        _password = string.Empty;
+        Navigation.NavigateTo("/admin");
+    }
+}

@@ -1,7 +1,40 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+@inject ITeamService TeamService
+@inject OrderDraftState DraftState
+@inject NavigationManager Navigation
 
-<h1>Hello, world!</h1>
+<PageTitle>Team Selection</PageTitle>
 
-Welcome to your new app.
+<h1>Choose Your Team</h1>
+
+@if (_teams.Count == 0)
+{
+    <p>No teams are available yet. Please ask an administrator to add one.</p>
+}
+else
+{
+    <div class="team-grid">
+        @foreach (var team in _teams)
+        {
+            <button class="team-button" @onclick="() => StartOrder(team)">
+                @team.Name
+            </button>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<Team> _teams = Array.Empty<Team>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _teams = await TeamService.GetActiveTeamsAsync();
+    }
+
+    private void StartOrder(Team team)
+    {
+        DraftState.SetTeam(team.Id, team.Name);
+        Navigation.NavigateTo($"/order/{team.Id}");
+    }
+}

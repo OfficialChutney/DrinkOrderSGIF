@@ -1,0 +1,11 @@
+namespace DrinkOrderSGIF.Domain.Entities;
+
+public sealed class Drink
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int Price { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+}

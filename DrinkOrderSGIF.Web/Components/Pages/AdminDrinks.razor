@@ -1,0 +1,83 @@
+@page "/admin/drinks"
+@inherits AdminPageBase
+
+@inject IDrinkService DrinkService
+
+<PageTitle>Manage Drinks</PageTitle>
+
+@if (!IsAuthorized)
+{
+    <p>Redirecting to login...</p>
+}
+else
+{
+    <h1>Drinks</h1>
+
+    <div class="admin-form">
+    <input placeholder="New drink name" @bind="_newDrinkName" />
+    <input type="number" min="0" placeholder="Price (Klip(s))" @bind="_newDrinkPrice" />
+    <button class="order-button" @onclick="AddDrink">Add Drink</button>
+    </div>
+
+    @if (_drinks.Count == 0)
+    {
+        <p>No drinks yet.</p>
+    }
+    else
+    {
+        <div class="admin-list">
+            @foreach (var drink in _drinks)
+            {
+                <div class="admin-row">
+                <div>
+                    <strong>@drink.Name</strong>
+                    <span class="status-tag">@drink.Price Klip(s)</span>
+                    <span class="status-tag">@((drink.IsActive) ? "Active" : "Inactive")</span>
+                </div>
+                    <button class="secondary-button" @onclick="() => ToggleDrink(drink)">
+                        @(drink.IsActive ? "Remove" : "Restore")
+                    </button>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private string _newDrinkName = string.Empty;
+    private int _newDrinkPrice;
+    private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && await EnsureAuthorizedAsync())
+        {
+            await LoadDrinksAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDrinksAsync()
+    {
+        _drinks = await DrinkService.GetAllDrinksAsync();
+    }
+
+    private async Task AddDrink()
+    {
+        if (string.IsNullOrWhiteSpace(_newDrinkName))
+        {
+            return;
+        }
+
+        await DrinkService.AddDrinkAsync(_newDrinkName, _newDrinkPrice);
+        _newDrinkName = string.Empty;
+        _newDrinkPrice = 0;
+        await LoadDrinksAsync();
+    }
+
+    private async Task ToggleDrink(Drink drink)
+    {
+        await DrinkService.SetDrinkActiveAsync(drink.Id, !drink.IsActive);
+        await LoadDrinksAsync();
+    }
+}
