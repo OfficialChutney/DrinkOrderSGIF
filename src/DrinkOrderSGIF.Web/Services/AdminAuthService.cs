@@ -9,8 +9,17 @@ public sealed class AdminAuthService(ProtectedLocalStorage storage)
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        var result = await storage.GetAsync<bool>(StorageKey);
-        return result.Success && result.Value;
+        try
+        {
+            var result = await storage.GetAsync<bool>(StorageKey);
+            return result.Success && result.Value;
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            // Stored payload is invalid (e.g., key change). Clear it to recover.
+            await storage.DeleteAsync(StorageKey);
+            return false;
+        }
     }
 
     public async Task<bool> TryLoginAsync(string password)
