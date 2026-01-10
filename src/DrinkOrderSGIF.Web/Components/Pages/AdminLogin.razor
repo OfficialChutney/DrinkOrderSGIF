@@ -8,8 +8,8 @@
 <h1>Admin Login</h1>
 
 <EditForm class="admin-form" Model="@this" OnSubmit="LoginAsync">
-    <input type="password" placeholder="Password" @bind="_password" />
-    <button class="order-button" type="submit">Log In</button>
+    <input type="password" placeholder="Kodeord" @bind="_password" />
+    <button class="order-button" type="submit">Log Ind</button>
 </EditForm>
 
 @if (!string.IsNullOrWhiteSpace(_error))
@@ -35,7 +35,7 @@
 
         if (!await AuthService.TryLoginAsync(_password))
         {
-            _error = "Incorrect password.";
+            _error = "Forkert kodeord.";
             return;
         }
 

@@ -3,24 +3,24 @@
 
 @inject ITeamService TeamService
 
-<PageTitle>Manage Teams</PageTitle>
+<PageTitle>Administrer hold</PageTitle>
 
 @if (!IsAuthorized)
 {
-    <p>Redirecting to login...</p>
+    <p>Sender til login side...</p>
 }
 else
 {
     <h1>Teams</h1>
 
     <div class="admin-form">
-        <input placeholder="New team name" @bind="_newTeamName" />
-        <button class="order-button" @onclick="AddTeam">Add Team</button>
+        <input placeholder="Nyt hold navn" @bind="_newTeamName" />
+        <button class="order-button" @onclick="AddTeam">Tilføj hold</button>
     </div>
 
     @if (_teams.Count == 0)
     {
-        <p>No teams yet.</p>
+        <p>Ingen hold oprettet endnu.</p>
     }
     else
     {
@@ -30,10 +30,10 @@ else
                 <div class="admin-row">
                     <div>
                         <strong>@team.Name</strong>
-                        <span class="status-tag">@((team.IsActive) ? "Active" : "Inactive")</span>
+                        <span class="status-tag">@((team.IsActive) ? "Aktiv" : "Inaktiv")</span>
                     </div>
                     <button class="secondary-button" @onclick="() => ToggleTeam(team)">
-                        @(team.IsActive ? "Remove" : "Restore")
+                        @(team.IsActive ? "Fjern" : "Gendan")
                     </button>
                 </div>
             }

@@ -5,19 +5,20 @@
 @inject OrderDraftState DraftState
 @inject NavigationManager Navigation
 
-<PageTitle>Order Drinks</PageTitle>
+<PageTitle>Bestil Drinks</PageTitle>
 
 @if (_team is null)
 {
     <p>That team could not be found. Please return to the home page.</p>
+    <p>Holdet kunne ikke findes. Returnér til forsiden.</p>
 }
 else
 {
-    <h1>Order for @_team.Name</h1>
+    <h1>Bestillign for @_team.Name</h1>
 
     @if (_drinks.Count == 0)
     {
-        <p>No drinks are available right now.</p>
+        <p>Det er ikke muligt at bestille lige nu.</p>
     }
     else
     {
@@ -40,10 +41,10 @@ else
         </div>
 
         <div class="order-actions">
-            <span>Total drinks: @TotalItems</span>
-            <span>Total: @DraftState.TotalPrice Klip(s)</span>
+            <span>Totale drinks: @TotalItems</span>
+            <span>Totale: @DraftState.TotalPrice Klip(s)</span>
             <button class="order-button" disabled="@(_team is null || TotalItems == 0)" @onclick="GoToReview">
-                Review Order
+                Se samlet ordrer
             </button>
         </div>
     }

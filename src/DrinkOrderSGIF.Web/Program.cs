@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddSignalR();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<DrinkOrderSGIF.Web.Services.OrderDraftState>();
 builder.Services.AddScoped<DrinkOrderSGIF.Web.Services.AdminAuthService>();
 builder.Services.AddScoped<ProtectedLocalStorage>();

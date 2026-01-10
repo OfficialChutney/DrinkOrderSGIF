@@ -8,15 +8,15 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @implements IAsyncDisposable
 
-<PageTitle>Team Drink Stats</PageTitle>
+<PageTitle>Hold bestilling statistik</PageTitle>
 
 @if (!IsAuthorized)
 {
-    <p>Redirecting to login...</p>
+    <p>Sender til login side...</p>
 }
 else if (_teamName is null)
 {
-    <p>Team not found.</p>
+    <p>Hold ikke fundet.</p>
 }
 else
 {
@@ -24,7 +24,7 @@ else
 
     @if (_summaries.Count == 0)
     {
-        <p>No drinks ordered yet for this team.</p>
+        <p>Ingen drinks er bestilt for dette hold endnu.</p>
     }
     else
     {

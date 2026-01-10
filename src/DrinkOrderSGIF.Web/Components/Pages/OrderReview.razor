@@ -4,22 +4,22 @@
 @inject OrderDraftState DraftState
 @inject NavigationManager Navigation
 
-<PageTitle>Review Order</PageTitle>
+<PageTitle>Gennemgå Ordre</PageTitle>
 
 @if (_submitted)
 {
-    <h1>Order Confirmed</h1>
-    <p>Your drinks are on the way.</p>
-    <button class="order-button" @onclick="ReturnHome">Back to Teams</button>
+    <h1>Bestilling bekræftet</h1>
+    <p>Din bestilling er på vej til dit bord.</p>
+    <button class="order-button" @onclick="ReturnHome">Tilbage til hold valg.</button>
 }
 else if (DraftState.TeamId is null || DraftState.Items.Count == 0)
 {
-    <p>No drinks are in your order yet.</p>
-    <button class="order-button" @onclick="ReturnHome">Back to Teams</button>
+    <p>Ingen drinks er i din bestilling endnu.</p>
+    <button class="order-button" @onclick="ReturnHome">Tilbage til hold valg.</button>
 }
 else
 {
-    <h1>Review Order for @DraftState.TeamName</h1>
+    <h1>Gennemgå bestilling for @DraftState.TeamName</h1>
 
     <div class="review-list">
         @foreach (var item in DraftState.Items)
@@ -32,9 +32,9 @@ else
     </div>
 
     <div class="order-actions">
-        <span>Total drinks: @TotalItems</span>
-        <span>Total: @DraftState.TotalPrice Klip(s)</span>
-        <button class="order-button" @onclick="PlaceOrder">Place Order</button>
+        <span>Totale drinks: @TotalItems</span>
+        <span>Totale: @DraftState.TotalPrice Klip(s)</span>
+        <button class="order-button" @onclick="PlaceOrder">Placér Order</button>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(_error))

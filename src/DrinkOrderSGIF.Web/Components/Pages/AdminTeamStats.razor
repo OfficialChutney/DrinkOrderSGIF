@@ -7,19 +7,19 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @implements IAsyncDisposable
 
-<PageTitle>Team Stats</PageTitle>
+<PageTitle>Hold Statistik</PageTitle>
 
 @if (!IsAuthorized)
 {
-    <p>Redirecting to login...</p>
+    <p>Sender til login side...</p>
 }
 else
 {
-    <h1>Teams</h1>
+    <h1>Hold</h1>
 
     @if (_summaries.Count == 0)
     {
-        <p>No orders have been placed yet.</p>
+        <p>Ingen ordrer endnu.</p>
     }
     else
     {
@@ -29,14 +29,14 @@ else
                 <div class="admin-row">
                     <div>
                         <strong>@summary.TeamName</strong>
-                        <div class="order-subtitle">@summary.OrderCount orders, @summary.TotalDrinks drinks</div>
+                        <div class="order-subtitle">@summary.OrderCount ordrer, @summary.TotalDrinks drinks</div>
                     </div>
-                    <a class="secondary-button" href="/admin/stats/teams/@summary.TeamId">View Drinks</a>
+                    <a class="secondary-button" href="/admin/stats/teams/@summary.TeamId">Se drinks</a>
                 </div>
             }
             <div class="admin-row">
                 <strong>Total</strong>
-                <span>@TotalTeamDrinks drinks across @TotalOrders orders</span>
+                <span>@TotalTeamDrinks drinks bestilt over @TotalOrders ordrer</span>
             </div>
         </div>
     }

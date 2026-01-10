@@ -14,14 +14,14 @@ else
     <h1>Drinks</h1>
 
     <div class="admin-form">
-    <input placeholder="New drink name" @bind="_newDrinkName" />
-    <input type="number" min="0" placeholder="Price (Klip(s))" @bind="_newDrinkPrice" />
-    <button class="order-button" @onclick="AddDrink">Add Drink</button>
+    <input placeholder="Nyt drink navn" @bind="_newDrinkName" />
+    <input type="number" min="0" placeholder="Pris (Klip(s))" @bind="_newDrinkPrice" />
+    <button class="order-button" @onclick="AddDrink">Tilføj Drink(s)</button>
     </div>
 
     @if (_drinks.Count == 0)
     {
-        <p>No drinks yet.</p>
+        <p>Ingen drinks tilføjet endnu.</p>
     }
     else
     {
@@ -32,10 +32,10 @@ else
                 <div>
                     <strong>@drink.Name</strong>
                     <span class="status-tag">@drink.Price Klip(s)</span>
-                    <span class="status-tag">@((drink.IsActive) ? "Active" : "Inactive")</span>
+                    <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
                 </div>
                     <button class="secondary-button" @onclick="() => ToggleDrink(drink)">
-                        @(drink.IsActive ? "Remove" : "Restore")
+                        @(drink.IsActive ? "Fjern" : "Gendan")
                     </button>
                 </div>
             }

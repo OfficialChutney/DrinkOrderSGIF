@@ -1,7 +1,7 @@
 @page "/admin/stats"
 @inherits AdminPageBase
 
-<PageTitle>Stats</PageTitle>
+<PageTitle>Statisitk</PageTitle>
 
 @if (!IsAuthorized)
 {
@@ -13,12 +13,13 @@ else
 
     <div class="admin-grid">
         <a class="admin-card" href="/admin/stats/teams">
-            <h2>By Team</h2>
+            <h2>Fordelt på hold</h2>
             <p>View totals for each team and drill into their drink mix.</p>
+            <p>Se totale bestillinger fordelt på hvert hold.</p>
         </a>
         <a class="admin-card" href="/admin/stats/drinks">
-            <h2>By Drink</h2>
-            <p>See total drinks ordered across all teams.</p>
+            <h2>Fordelt på drink type.</h2>
+            <p>Se total fordelt på drinks samlet for alle hold.</p>
         </a>
     </div>
 }

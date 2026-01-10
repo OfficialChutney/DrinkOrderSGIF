@@ -37,6 +37,11 @@
 
     private bool _isDisposed;
 
+    protected override void OnInitialized()
+    {
+        AuthService.AuthStateChanged += HandleAuthStateChanged;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -64,6 +69,18 @@
 
     public void Dispose()
     {
+        AuthService.AuthStateChanged -= HandleAuthStateChanged;
         _isDisposed = true;
+    }
+
+    private async void HandleAuthStateChanged(bool isAuthenticated)
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        _isAuthenticated = isAuthenticated;
+        await InvokeAsync(StateHasChanged);
     }
 }

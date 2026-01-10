@@ -9,19 +9,19 @@
 
 @using Microsoft.AspNetCore.SignalR.Client
 
-<PageTitle>Orders</PageTitle>
+<PageTitle>Ordrer</PageTitle>
 
 @if (!IsAuthorized)
 {
-    <p>Redirecting to login...</p>
+    <p>Sender til login side...</p>
 }
 else
 {
-    <h1>Pending Orders</h1>
+    <h1>Afventende ordrer</h1>
 
     @if (_orders.Count == 0)
     {
-        <p>No pending orders.</p>
+        <p>Ingen afventende ordrer</p>
     }
     else
     {
@@ -34,7 +34,7 @@ else
                             <strong>@order.TeamName</strong>
                             <div class="order-subtitle">@order.CreatedAt.ToLocalTime().ToString("g")</div>
                         </div>
-                        <button class="order-button" @onclick="() => CompleteOrder(order.Id)">Order Complete</button>
+                        <button class="order-button" @onclick="() => CompleteOrder(order.Id)">Ordre Gennemført</button>
                     </div>
                     <div class="order-items">
                         @foreach (var item in order.Items.OrderBy(i => i.DrinkName))

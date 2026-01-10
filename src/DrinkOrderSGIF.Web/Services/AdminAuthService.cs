@@ -7,6 +7,8 @@ public sealed class AdminAuthService(ProtectedLocalStorage storage)
     private const string StorageKey = "DrinkOrderSGIF.Admin";
     private const string Password = "QOTSGIF2026";
 
+    public event Action<bool>? AuthStateChanged;
+
     public async Task<bool> IsAuthenticatedAsync()
     {
         try
@@ -18,6 +20,7 @@ public sealed class AdminAuthService(ProtectedLocalStorage storage)
         {
             // Stored payload is invalid (e.g., key change). Clear it to recover.
             await storage.DeleteAsync(StorageKey);
+            AuthStateChanged?.Invoke(false);
             return false;
         }
     }
@@ -30,11 +33,13 @@ public sealed class AdminAuthService(ProtectedLocalStorage storage)
         }
 
         await storage.SetAsync(StorageKey, true);
+        AuthStateChanged?.Invoke(true);
         return true;
     }
 
     public async Task LogoutAsync()
     {
         await storage.DeleteAsync(StorageKey);
+        AuthStateChanged?.Invoke(false);
     }
 }
