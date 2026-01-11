@@ -3,20 +3,20 @@
 
 @inject IDrinkService DrinkService
 
-<PageTitle>Manage Drinks</PageTitle>
+<PageTitle>Administrer drinks</PageTitle>
 
 @if (!IsAuthorized)
 {
-    <p>Redirecting to login...</p>
+    <p>Sender til login-siden...</p>
 }
 else
 {
     <h1>Drinks</h1>
 
     <div class="admin-form">
-    <input placeholder="Nyt drink navn" @bind="_newDrinkName" />
-    <input type="number" min="0" placeholder="Pris (Klip(s))" @bind="_newDrinkPrice" />
-    <button class="order-button" @onclick="AddDrink">Tilføj Drink(s)</button>
+        <input placeholder="Nyt drinknavn" @bind="_newDrinkName" />
+        <input type="number" min="0" placeholder="Pris (klip)" @bind="_newDrinkPrice" />
+        <button class="order-button" @onclick="AddDrink">Tilføj drink</button>
     </div>
 
     @if (_drinks.Count == 0)
@@ -29,14 +29,33 @@ else
             @foreach (var drink in _drinks)
             {
                 <div class="admin-row">
-                <div>
-                    <strong>@drink.Name</strong>
-                    <span class="status-tag">@drink.Price Klip(s)</span>
-                    <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
-                </div>
-                    <button class="secondary-button" @onclick="() => ToggleDrink(drink)">
-                        @(drink.IsActive ? "Fjern" : "Gendan")
-                    </button>
+                    <div>
+                        @if (_editingDrinkId == drink.Id)
+                        {
+                            <input placeholder="Drinknavn" @bind="_editingDrinkName" />
+                            <input type="number" min="0" placeholder="Pris (klip)" @bind="_editingDrinkPrice" />
+                        }
+                        else
+                        {
+                            <strong>@drink.Name</strong>
+                            <span class="status-tag">@drink.Price klip</span>
+                            <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
+                        }
+                    </div>
+                    <div class="admin-actions">
+                        @if (_editingDrinkId == drink.Id)
+                        {
+                            <button class="order-button" @onclick="() => SaveDrinkEdit(drink)">Gem</button>
+                            <button class="secondary-button" @onclick="CancelDrinkEdit">Annuller</button>
+                        }
+                        else
+                        {
+                            <button class="secondary-button" @onclick="() => StartDrinkEdit(drink)">Rediger</button>
+                            <button class="secondary-button" @onclick="() => ToggleDrink(drink)">
+                                @(drink.IsActive ? "Fjern" : "Gendan")
+                            </button>
+                        }
+                    </div>
                 </div>
             }
         </div>
@@ -47,6 +66,9 @@ else
     private string _newDrinkName = string.Empty;
     private int _newDrinkPrice;
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
+    private Guid? _editingDrinkId;
+    private string _editingDrinkName = string.Empty;
+    private int _editingDrinkPrice;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -73,6 +95,32 @@ else
         _newDrinkName = string.Empty;
         _newDrinkPrice = 0;
         await LoadDrinksAsync();
+    }
+
+    private void StartDrinkEdit(Drink drink)
+    {
+        _editingDrinkId = drink.Id;
+        _editingDrinkName = drink.Name;
+        _editingDrinkPrice = drink.Price;
+    }
+
+    private void CancelDrinkEdit()
+    {
+        _editingDrinkId = null;
+        _editingDrinkName = string.Empty;
+        _editingDrinkPrice = 0;
+    }
+
+    private async Task SaveDrinkEdit(Drink drink)
+    {
+        if (_editingDrinkId != drink.Id || string.IsNullOrWhiteSpace(_editingDrinkName))
+        {
+            return;
+        }
+
+        await DrinkService.UpdateDrinkAsync(drink.Id, _editingDrinkName, _editingDrinkPrice);
+        await LoadDrinksAsync();
+        CancelDrinkEdit();
     }
 
     private async Task ToggleDrink(Drink drink)

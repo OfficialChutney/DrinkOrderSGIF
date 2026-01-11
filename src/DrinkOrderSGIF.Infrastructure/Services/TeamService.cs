@@ -55,6 +55,24 @@ public sealed class TeamService(AppDbContext dbContext) : ITeamService
         return team;
     }
 
+    public async Task UpdateTeamAsync(Guid teamId, string name, CancellationToken cancellationToken = default)
+    {
+        var trimmed = name.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new ArgumentException("Team name is required.", nameof(name));
+        }
+
+        var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken);
+        if (team is null)
+        {
+            return;
+        }
+
+        team.Name = trimmed;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetTeamActiveAsync(Guid teamId, bool isActive, CancellationToken cancellationToken = default)
     {
         var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.Id == teamId, cancellationToken);

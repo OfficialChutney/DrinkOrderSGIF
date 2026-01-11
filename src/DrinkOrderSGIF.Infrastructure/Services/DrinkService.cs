@@ -54,6 +54,30 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         return drink;
     }
 
+    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, CancellationToken cancellationToken = default)
+    {
+        var trimmed = name.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            throw new ArgumentException("Drink name is required.", nameof(name));
+        }
+
+        if (price < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or higher.");
+        }
+
+        var drink = await dbContext.Drinks.FirstOrDefaultAsync(d => d.Id == drinkId, cancellationToken);
+        if (drink is null)
+        {
+            return;
+        }
+
+        drink.Name = trimmed;
+        drink.Price = price;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetDrinkActiveAsync(Guid drinkId, bool isActive, CancellationToken cancellationToken = default)
     {
         var drink = await dbContext.Drinks.FirstOrDefaultAsync(d => d.Id == drinkId, cancellationToken);

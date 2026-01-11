@@ -7,14 +7,14 @@
 
 @if (!IsAuthorized)
 {
-    <p>Sender til login side...</p>
+    <p>Sender til login-siden...</p>
 }
 else
 {
-    <h1>Teams</h1>
+    <h1>Hold</h1>
 
     <div class="admin-form">
-        <input placeholder="Nyt hold navn" @bind="_newTeamName" />
+        <input placeholder="Nyt holdnavn" @bind="_newTeamName" />
         <button class="order-button" @onclick="AddTeam">Tilføj hold</button>
     </div>
 
@@ -29,12 +29,30 @@ else
             {
                 <div class="admin-row">
                     <div>
-                        <strong>@team.Name</strong>
+                        @if (_editingTeamId == team.Id)
+                        {
+                            <input placeholder="Holdnavn" @bind="_editingTeamName" />
+                        }
+                        else
+                        {
+                            <strong>@team.Name</strong>
+                        }
                         <span class="status-tag">@((team.IsActive) ? "Aktiv" : "Inaktiv")</span>
                     </div>
-                    <button class="secondary-button" @onclick="() => ToggleTeam(team)">
-                        @(team.IsActive ? "Fjern" : "Gendan")
-                    </button>
+                    <div class="admin-actions">
+                        @if (_editingTeamId == team.Id)
+                        {
+                            <button class="order-button" @onclick="() => SaveTeamEdit(team)">Gem</button>
+                            <button class="secondary-button" @onclick="CancelTeamEdit">Annuller</button>
+                        }
+                        else
+                        {
+                            <button class="secondary-button" @onclick="() => StartTeamEdit(team)">Rediger</button>
+                            <button class="secondary-button" @onclick="() => ToggleTeam(team)">
+                                @(team.IsActive ? "Fjern" : "Gendan")
+                            </button>
+                        }
+                    </div>
                 </div>
             }
         </div>
@@ -44,6 +62,8 @@ else
 @code {
     private string _newTeamName = string.Empty;
     private IReadOnlyList<Team> _teams = Array.Empty<Team>();
+    private Guid? _editingTeamId;
+    private string _editingTeamName = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -69,6 +89,30 @@ else
         await TeamService.AddTeamAsync(_newTeamName);
         _newTeamName = string.Empty;
         await LoadTeamsAsync();
+    }
+
+    private void StartTeamEdit(Team team)
+    {
+        _editingTeamId = team.Id;
+        _editingTeamName = team.Name;
+    }
+
+    private void CancelTeamEdit()
+    {
+        _editingTeamId = null;
+        _editingTeamName = string.Empty;
+    }
+
+    private async Task SaveTeamEdit(Team team)
+    {
+        if (_editingTeamId != team.Id || string.IsNullOrWhiteSpace(_editingTeamName))
+        {
+            return;
+        }
+
+        await TeamService.UpdateTeamAsync(team.Id, _editingTeamName);
+        await LoadTeamsAsync();
+        CancelTeamEdit();
     }
 
     private async Task ToggleTeam(Team team)
