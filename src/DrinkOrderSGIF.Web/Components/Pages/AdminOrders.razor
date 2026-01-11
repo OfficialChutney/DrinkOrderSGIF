@@ -5,6 +5,7 @@
 @using OrderEntity = DrinkOrderSGIF.Domain.Entities.Order
 
 @inject IOrderService OrderService
+@inject IDrinkService DrinkService
 @inject NavigationManager Navigation
 
 @using Microsoft.AspNetCore.SignalR.Client
@@ -44,6 +45,10 @@ else
                                 <span>@item.Quantity</span>
                             </div>
                         }
+                        <div class="order-item-row">
+                            <strong>Total klips:</strong>
+                            <strong>@GetOrderTotal(order)</strong>
+                        </div>
                     </div>
                 </div>
             }
@@ -53,6 +58,7 @@ else
 
 @code {
     private IReadOnlyList<OrderEntity> _orders = Array.Empty<OrderEntity>();
+    private IReadOnlyDictionary<Guid, int> _drinkPriceLookup = new Dictionary<Guid, int>();
     private HubConnection? _hubConnection;
     private bool _loaded;
 
@@ -88,6 +94,24 @@ else
     private async Task LoadOrdersAsync()
     {
         _orders = await OrderService.GetPendingOrdersAsync();
+        var drinks = await DrinkService.GetAllDrinksAsync();
+        _drinkPriceLookup = drinks
+            .GroupBy(drink => drink.Id)
+            .ToDictionary(group => group.Key, group => group.First().Price);
+    }
+
+    private int GetOrderTotal(OrderEntity order)
+    {
+        var total = 0;
+        foreach (var item in order.Items)
+        {
+            if (_drinkPriceLookup.TryGetValue(item.DrinkId, out var price))
+            {
+                total += item.Quantity * price;
+            }
+        }
+
+        return total;
     }
 
     private async Task CompleteOrder(Guid orderId)
