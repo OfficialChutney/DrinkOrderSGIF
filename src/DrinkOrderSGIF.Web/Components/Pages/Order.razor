@@ -9,12 +9,11 @@
 
 @if (_team is null)
 {
-    <p>That team could not be found. Please return to the home page.</p>
     <p>Holdet kunne ikke findes. Returnér til forsiden.</p>
 }
 else
 {
-    <h1>Bestillign for @_team.Name</h1>
+    <h1>Bestilling for @_team.Name</h1>
 
     @if (_drinks.Count == 0)
     {
