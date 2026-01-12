@@ -58,7 +58,7 @@ else
 
 @code {
     private IReadOnlyList<OrderEntity> _orders = Array.Empty<OrderEntity>();
-    private IReadOnlyDictionary<Guid, int> _drinkPriceLookup = new Dictionary<Guid, int>();
+    private IReadOnlyDictionary<Guid, DrinkPricing> _drinkPricingLookup = new Dictionary<Guid, DrinkPricing>();
     private HubConnection? _hubConnection;
     private bool _loaded;
 
@@ -95,9 +95,9 @@ else
     {
         _orders = await OrderService.GetPendingOrdersAsync();
         var drinks = await DrinkService.GetAllDrinksAsync();
-        _drinkPriceLookup = drinks
+        _drinkPricingLookup = drinks
             .GroupBy(drink => drink.Id)
-            .ToDictionary(group => group.Key, group => group.First().Price);
+            .ToDictionary(group => group.Key, group => new DrinkPricing(group.First().Price, group.First().UnitsPerPrice));
     }
 
     private int GetOrderTotal(OrderEntity order)
@@ -105,14 +105,21 @@ else
         var total = 0;
         foreach (var item in order.Items)
         {
-            if (_drinkPriceLookup.TryGetValue(item.DrinkId, out var price))
+            if (_drinkPricingLookup.TryGetValue(item.DrinkId, out var pricing))
             {
-                total += item.Quantity * price;
+                var increments = item.Quantity / Math.Max(1, pricing.UnitsPerPrice);
+                if (item.Quantity % Math.Max(1, pricing.UnitsPerPrice) != 0)
+                {
+                    increments += 1;
+                }
+                total += increments * pricing.Price;
             }
         }
 
         return total;
     }
+
+    private sealed record DrinkPricing(int Price, int UnitsPerPrice);
 
     private async Task CompleteOrder(Guid orderId)
     {

@@ -26,7 +26,7 @@ else
         {
             <div class="review-row">
                 <span>@item.DrinkName</span>
-                <span>@item.Quantity x @item.Price Klip(s)</span>
+                <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price Klip(s)</span>
             </div>
         }
     </div>
@@ -47,7 +47,7 @@ else
     private bool _submitted;
     private string? _error;
 
-    private int TotalItems => DraftState.Items.Sum(item => item.Quantity);
+    private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
 
     private async Task PlaceOrder()
     {
@@ -62,7 +62,7 @@ else
         {
             var request = new OrderRequest(
                 DraftState.TeamId.Value,
-                DraftState.Items.Select(item => new OrderItemRequest(item.DrinkId, item.Quantity)).ToList());
+                DraftState.Items.Select(item => new OrderItemRequest(item.DrinkId, item.TotalUnits)).ToList());
             await OrderService.CreateOrderAsync(request);
             DraftState.Clear();
             _submitted = true;

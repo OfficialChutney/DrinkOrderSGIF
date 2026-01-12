@@ -24,7 +24,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Drink> AddDrinkAsync(string name, int price, CancellationToken cancellationToken = default)
+    public async Task<Drink> AddDrinkAsync(string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -35,6 +35,11 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         if (price < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or higher.");
+        }
+
+        if (unitsPerPrice < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(unitsPerPrice), "Units per price must be at least 1.");
         }
 
         var existing = await dbContext.Drinks
@@ -44,17 +49,18 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         {
             existing.IsActive = true;
             existing.Price = price;
+            existing.UnitsPerPrice = unitsPerPrice;
             await dbContext.SaveChangesAsync(cancellationToken);
             return existing;
         }
 
-        var drink = new Drink { Name = trimmed, Price = price, IsActive = true };
+        var drink = new Drink { Name = trimmed, Price = price, UnitsPerPrice = unitsPerPrice, IsActive = true };
         dbContext.Drinks.Add(drink);
         await dbContext.SaveChangesAsync(cancellationToken);
         return drink;
     }
 
-    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, CancellationToken cancellationToken = default)
+    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -65,6 +71,11 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         if (price < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or higher.");
+        }
+
+        if (unitsPerPrice < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(unitsPerPrice), "Units per price must be at least 1.");
         }
 
         var drink = await dbContext.Drinks.FirstOrDefaultAsync(d => d.Id == drinkId, cancellationToken);
@@ -75,6 +86,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
 
         drink.Name = trimmed;
         drink.Price = price;
+        drink.UnitsPerPrice = unitsPerPrice;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

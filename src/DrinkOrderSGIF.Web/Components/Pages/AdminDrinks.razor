@@ -16,6 +16,7 @@ else
     <div class="admin-form">
         <input placeholder="Nyt drinknavn" @bind="_newDrinkName" />
         <input type="number" min="0" placeholder="Pris (klip)" @bind="_newDrinkPrice" />
+        <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_newDrinkUnitsPerPrice" />
         <button class="order-button" @onclick="AddDrink">Tilføj drink</button>
     </div>
 
@@ -34,11 +35,13 @@ else
                         {
                             <input placeholder="Drinknavn" @bind="_editingDrinkName" />
                             <input type="number" min="0" placeholder="Pris (klip)" @bind="_editingDrinkPrice" />
+                            <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_editingDrinkUnitsPerPrice" />
                         }
                         else
                         {
                             <strong>@drink.Name</strong>
                             <span class="status-tag">@drink.Price klip</span>
+                            <span class="status-tag">@drink.UnitsPerPrice pr. pris</span>
                             <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
                         }
                     </div>
@@ -64,11 +67,13 @@ else
 
 @code {
     private string _newDrinkName = string.Empty;
-    private int _newDrinkPrice;
+    private int? _newDrinkPrice;
+    private int? _newDrinkUnitsPerPrice;
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
     private Guid? _editingDrinkId;
     private string _editingDrinkName = string.Empty;
     private int _editingDrinkPrice;
+    private int _editingDrinkUnitsPerPrice = 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -86,14 +91,17 @@ else
 
     private async Task AddDrink()
     {
-        if (string.IsNullOrWhiteSpace(_newDrinkName))
+        if (string.IsNullOrWhiteSpace(_newDrinkName)
+            || _newDrinkPrice is null
+            || _newDrinkUnitsPerPrice is null)
         {
             return;
         }
 
-        await DrinkService.AddDrinkAsync(_newDrinkName, _newDrinkPrice);
+        await DrinkService.AddDrinkAsync(_newDrinkName, _newDrinkPrice.Value, _newDrinkUnitsPerPrice.Value);
         _newDrinkName = string.Empty;
-        _newDrinkPrice = 0;
+        _newDrinkPrice = null;
+        _newDrinkUnitsPerPrice = null;
         await LoadDrinksAsync();
     }
 
@@ -102,6 +110,7 @@ else
         _editingDrinkId = drink.Id;
         _editingDrinkName = drink.Name;
         _editingDrinkPrice = drink.Price;
+        _editingDrinkUnitsPerPrice = drink.UnitsPerPrice;
     }
 
     private void CancelDrinkEdit()
@@ -109,6 +118,7 @@ else
         _editingDrinkId = null;
         _editingDrinkName = string.Empty;
         _editingDrinkPrice = 0;
+        _editingDrinkUnitsPerPrice = 1;
     }
 
     private async Task SaveDrinkEdit(Drink drink)
@@ -118,7 +128,7 @@ else
             return;
         }
 
-        await DrinkService.UpdateDrinkAsync(drink.Id, _editingDrinkName, _editingDrinkPrice);
+        await DrinkService.UpdateDrinkAsync(drink.Id, _editingDrinkName, _editingDrinkPrice, _editingDrinkUnitsPerPrice);
         await LoadDrinksAsync();
         CancelDrinkEdit();
     }

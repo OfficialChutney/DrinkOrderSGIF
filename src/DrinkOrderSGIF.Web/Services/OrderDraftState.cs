@@ -23,7 +23,12 @@ public sealed class OrderDraftState
 
     public int GetQuantity(Guid drinkId)
     {
-        return _items.TryGetValue(drinkId, out var item) ? item.Quantity : 0;
+        return _items.TryGetValue(drinkId, out var item) ? item.TotalUnits : 0;
+    }
+
+    public int GetIncrementCount(Guid drinkId)
+    {
+        return _items.TryGetValue(drinkId, out var item) ? item.IncrementCount : 0;
     }
 
     public int GetPrice(Guid drinkId)
@@ -31,18 +36,19 @@ public sealed class OrderDraftState
         return _items.TryGetValue(drinkId, out var item) ? item.Price : 0;
     }
 
-    public int TotalPrice => _items.Values.Sum(item => item.Quantity * item.Price);
+    public int TotalPrice => _items.Values.Sum(item => item.TotalPrice);
 
-    public void Increment(Guid drinkId, string drinkName, int price)
+    public void Increment(Guid drinkId, string drinkName, int price, int unitsPerPrice)
     {
         if (_items.TryGetValue(drinkId, out var item))
         {
-            item.Quantity += 1;
+            item.IncrementCount += 1;
             item.Price = price;
+            item.UnitsPerPrice = unitsPerPrice;
         }
         else
         {
-            _items[drinkId] = new DraftItem(drinkId, drinkName, price, 1);
+            _items[drinkId] = new DraftItem(drinkId, drinkName, price, unitsPerPrice, 1);
         }
     }
 
@@ -53,8 +59,8 @@ public sealed class OrderDraftState
             return;
         }
 
-        item.Quantity -= 1;
-        if (item.Quantity <= 0)
+        item.IncrementCount -= 1;
+        if (item.IncrementCount <= 0)
         {
             _items.Remove(drinkId);
         }
@@ -70,16 +76,20 @@ public sealed class OrderDraftState
 
 public sealed class DraftItem
 {
-    public DraftItem(Guid drinkId, string drinkName, int price, int quantity)
+    public DraftItem(Guid drinkId, string drinkName, int price, int unitsPerPrice, int incrementCount)
     {
         DrinkId = drinkId;
         DrinkName = drinkName;
         Price = price;
-        Quantity = quantity;
+        UnitsPerPrice = unitsPerPrice;
+        IncrementCount = incrementCount;
     }
 
     public Guid DrinkId { get; }
     public string DrinkName { get; }
     public int Price { get; set; }
-    public int Quantity { get; set; }
+    public int UnitsPerPrice { get; set; }
+    public int IncrementCount { get; set; }
+    public int TotalUnits => IncrementCount * UnitsPerPrice;
+    public int TotalPrice => IncrementCount * Price;
 }
