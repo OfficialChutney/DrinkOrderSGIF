@@ -31,10 +31,15 @@ else
                     <div>
                         <div class="drink-name">@drink.Name</div>
                         <div class="order-subtitle">
-                            Pris: @drink.Price DKK
+                            
                             @if (drink.KlipsPrice.HasValue)
                             {
-                                <span>/ @FormatKlips(drink.KlipsPrice.Value) Klips</span>
+                                <span>Pris: @(drink.Price * quantity) DKK / @FormatKlips(drink.KlipsPrice.Value * quantity) Klips</span>
+                            }
+                            else
+                            {
+                                <span>Pris: @drink.Price DKK</span>
+
                             }
                         </div>
                     </div>
