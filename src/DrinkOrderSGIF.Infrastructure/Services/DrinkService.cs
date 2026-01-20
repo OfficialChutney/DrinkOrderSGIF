@@ -24,7 +24,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Drink> AddDrinkAsync(string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
+    public async Task<Drink> AddDrinkAsync(string name, int price, int unitsPerPrice, DrinkCurrency currency, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -50,17 +50,25 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
             existing.IsActive = true;
             existing.Price = price;
             existing.UnitsPerPrice = unitsPerPrice;
+            existing.Currency = currency;
             await dbContext.SaveChangesAsync(cancellationToken);
             return existing;
         }
 
-        var drink = new Drink { Name = trimmed, Price = price, UnitsPerPrice = unitsPerPrice, IsActive = true };
+        var drink = new Drink
+        {
+            Name = trimmed,
+            Price = price,
+            UnitsPerPrice = unitsPerPrice,
+            Currency = currency,
+            IsActive = true
+        };
         dbContext.Drinks.Add(drink);
         await dbContext.SaveChangesAsync(cancellationToken);
         return drink;
     }
 
-    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
+    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, int unitsPerPrice, DrinkCurrency currency, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -87,6 +95,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         drink.Name = trimmed;
         drink.Price = price;
         drink.UnitsPerPrice = unitsPerPrice;
+        drink.Currency = currency;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

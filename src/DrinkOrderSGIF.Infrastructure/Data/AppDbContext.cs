@@ -22,6 +22,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Price).IsRequired();
             entity.Property(e => e.UnitsPerPrice).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.Currency)
+                .HasConversion<string>()
+                .IsRequired()
+                .HasMaxLength(10)
+                .HasDefaultValue(DrinkCurrency.Klips);
         });
 
         modelBuilder.Entity<Order>(entity =>

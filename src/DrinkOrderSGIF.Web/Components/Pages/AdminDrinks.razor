@@ -15,7 +15,11 @@ else
 
     <div class="admin-form">
         <input placeholder="Nyt drinknavn" @bind="_newDrinkName" />
-        <input type="number" min="0" placeholder="Pris (klip)" @bind="_newDrinkPrice" />
+        <input type="number" min="0" placeholder="Pris" @bind="_newDrinkPrice" />
+        <select @bind="_newDrinkCurrency">
+            <option value="@DrinkCurrency.Klips">Klips</option>
+            <option value="@DrinkCurrency.Dkk">DKK</option>
+        </select>
         <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_newDrinkUnitsPerPrice" />
         <button class="order-button" @onclick="AddDrink">Tilføj drink</button>
     </div>
@@ -34,13 +38,17 @@ else
                         @if (_editingDrinkId == drink.Id)
                         {
                             <input placeholder="Drinknavn" @bind="_editingDrinkName" />
-                            <input type="number" min="0" placeholder="Pris (klip)" @bind="_editingDrinkPrice" />
+                            <input type="number" min="0" placeholder="Pris" @bind="_editingDrinkPrice" />
+                            <select @bind="_editingDrinkCurrency">
+                                <option value="@DrinkCurrency.Klips">Klips</option>
+                                <option value="@DrinkCurrency.Dkk">DKK</option>
+                            </select>
                             <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_editingDrinkUnitsPerPrice" />
                         }
                         else
                         {
                             <strong>@drink.Name</strong>
-                            <span class="status-tag">@drink.Price klip</span>
+                            <span class="status-tag">@drink.Price @drink.Currency.GetLabel()</span>
                             <span class="status-tag">@drink.UnitsPerPrice pr. pris</span>
                             <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
                         }
@@ -68,11 +76,13 @@ else
 @code {
     private string _newDrinkName = string.Empty;
     private int? _newDrinkPrice;
+    private DrinkCurrency _newDrinkCurrency = DrinkCurrency.Klips;
     private int? _newDrinkUnitsPerPrice;
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
     private Guid? _editingDrinkId;
     private string _editingDrinkName = string.Empty;
     private int _editingDrinkPrice;
+    private DrinkCurrency _editingDrinkCurrency = DrinkCurrency.Klips;
     private int _editingDrinkUnitsPerPrice = 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -98,9 +108,14 @@ else
             return;
         }
 
-        await DrinkService.AddDrinkAsync(_newDrinkName, _newDrinkPrice.Value, _newDrinkUnitsPerPrice.Value);
+        await DrinkService.AddDrinkAsync(
+            _newDrinkName,
+            _newDrinkPrice.Value,
+            _newDrinkUnitsPerPrice.Value,
+            _newDrinkCurrency);
         _newDrinkName = string.Empty;
         _newDrinkPrice = null;
+        _newDrinkCurrency = DrinkCurrency.Klips;
         _newDrinkUnitsPerPrice = null;
         await LoadDrinksAsync();
     }
@@ -110,6 +125,7 @@ else
         _editingDrinkId = drink.Id;
         _editingDrinkName = drink.Name;
         _editingDrinkPrice = drink.Price;
+        _editingDrinkCurrency = drink.Currency;
         _editingDrinkUnitsPerPrice = drink.UnitsPerPrice;
     }
 
@@ -118,6 +134,7 @@ else
         _editingDrinkId = null;
         _editingDrinkName = string.Empty;
         _editingDrinkPrice = 0;
+        _editingDrinkCurrency = DrinkCurrency.Klips;
         _editingDrinkUnitsPerPrice = 1;
     }
 
@@ -128,7 +145,12 @@ else
             return;
         }
 
-        await DrinkService.UpdateDrinkAsync(drink.Id, _editingDrinkName, _editingDrinkPrice, _editingDrinkUnitsPerPrice);
+        await DrinkService.UpdateDrinkAsync(
+            drink.Id,
+            _editingDrinkName,
+            _editingDrinkPrice,
+            _editingDrinkUnitsPerPrice,
+            _editingDrinkCurrency);
         await LoadDrinksAsync();
         CancelDrinkEdit();
     }

@@ -26,14 +26,21 @@ else
         {
             <div class="review-row">
                 <span>@item.DrinkName</span>
-                <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price Klip(s)</span>
+                <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price @item.Currency.GetLabel()</span>
             </div>
         }
     </div>
 
     <div class="order-actions">
         <span>Totale drinks: @TotalItems</span>
-        <span>Totale: @DraftState.TotalPrice Klip(s)</span>
+        @if (TotalKlips > 0)
+        {
+            <span>Totale: @TotalKlips Klips</span>
+        }
+        @if (TotalDkk > 0)
+        {
+            <span>Totale: @TotalDkk DKK</span>
+        }
         <button class="order-button" @onclick="PlaceOrder">Placér Order</button>
     </div>
 
@@ -48,6 +55,8 @@ else
     private string? _error;
 
     private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
+    private int TotalKlips => DraftState.GetTotalForCurrency(DrinkCurrency.Klips);
+    private int TotalDkk => DraftState.GetTotalForCurrency(DrinkCurrency.Dkk);
 
     private async Task PlaceOrder()
     {

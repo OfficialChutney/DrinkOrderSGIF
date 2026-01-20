@@ -1,3 +1,5 @@
+using DrinkOrderSGIF.Domain.Entities;
+
 namespace DrinkOrderSGIF.Web.Services;
 
 public sealed class OrderDraftState
@@ -38,17 +40,23 @@ public sealed class OrderDraftState
 
     public int TotalPrice => _items.Values.Sum(item => item.TotalPrice);
 
-    public void Increment(Guid drinkId, string drinkName, int price, int unitsPerPrice)
+    public int GetTotalForCurrency(DrinkCurrency currency)
+    {
+        return _items.Values.Where(item => item.Currency == currency).Sum(item => item.TotalPrice);
+    }
+
+    public void Increment(Guid drinkId, string drinkName, int price, int unitsPerPrice, DrinkCurrency currency)
     {
         if (_items.TryGetValue(drinkId, out var item))
         {
             item.IncrementCount += 1;
             item.Price = price;
             item.UnitsPerPrice = unitsPerPrice;
+            item.Currency = currency;
         }
         else
         {
-            _items[drinkId] = new DraftItem(drinkId, drinkName, price, unitsPerPrice, 1);
+            _items[drinkId] = new DraftItem(drinkId, drinkName, price, unitsPerPrice, currency, 1);
         }
     }
 
@@ -76,12 +84,13 @@ public sealed class OrderDraftState
 
 public sealed class DraftItem
 {
-    public DraftItem(Guid drinkId, string drinkName, int price, int unitsPerPrice, int incrementCount)
+    public DraftItem(Guid drinkId, string drinkName, int price, int unitsPerPrice, DrinkCurrency currency, int incrementCount)
     {
         DrinkId = drinkId;
         DrinkName = drinkName;
         Price = price;
         UnitsPerPrice = unitsPerPrice;
+        Currency = currency;
         IncrementCount = incrementCount;
     }
 
@@ -89,6 +98,7 @@ public sealed class DraftItem
     public string DrinkName { get; }
     public int Price { get; set; }
     public int UnitsPerPrice { get; set; }
+    public DrinkCurrency Currency { get; set; }
     public int IncrementCount { get; set; }
     public int TotalUnits => IncrementCount * UnitsPerPrice;
     public int TotalPrice => IncrementCount * Price;
