@@ -15,7 +15,8 @@ else
 
     <div class="admin-form">
         <input placeholder="Nyt drinknavn" @bind="_newDrinkName" />
-        <input type="number" min="0" placeholder="Pris (klip)" @bind="_newDrinkPrice" />
+        <input type="number" min="0" placeholder="Pris (DKK)" @bind="_newDrinkPrice" />
+        <input type="number" min="0" placeholder="Pris (Klips, valgfri)" @bind="_newDrinkKlipsPrice" />
         <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_newDrinkUnitsPerPrice" />
         <button class="order-button" @onclick="AddDrink">Tilføj drink</button>
     </div>
@@ -34,13 +35,18 @@ else
                         @if (_editingDrinkId == drink.Id)
                         {
                             <input placeholder="Drinknavn" @bind="_editingDrinkName" />
-                            <input type="number" min="0" placeholder="Pris (klip)" @bind="_editingDrinkPrice" />
+                            <input type="number" min="0" placeholder="Pris (DKK)" @bind="_editingDrinkPrice" />
+                            <input type="number" min="0" placeholder="Pris (Klips, valgfri)" @bind="_editingDrinkKlipsPrice" />
                             <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_editingDrinkUnitsPerPrice" />
                         }
                         else
                         {
                             <strong>@drink.Name</strong>
-                            <span class="status-tag">@drink.Price klip</span>
+                            <span class="status-tag">@drink.Price DKK</span>
+                            @if (drink.KlipsPrice.HasValue)
+                            {
+                                <span class="status-tag">@drink.KlipsPrice.Value Klips</span>
+                            }
                             <span class="status-tag">@drink.UnitsPerPrice pr. pris</span>
                             <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
                         }
@@ -68,11 +74,13 @@ else
 @code {
     private string _newDrinkName = string.Empty;
     private int? _newDrinkPrice;
+    private int? _newDrinkKlipsPrice;
     private int? _newDrinkUnitsPerPrice;
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
     private Guid? _editingDrinkId;
     private string _editingDrinkName = string.Empty;
     private int _editingDrinkPrice;
+    private int? _editingDrinkKlipsPrice;
     private int _editingDrinkUnitsPerPrice = 1;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -98,9 +106,14 @@ else
             return;
         }
 
-        await DrinkService.AddDrinkAsync(_newDrinkName, _newDrinkPrice.Value, _newDrinkUnitsPerPrice.Value);
+        await DrinkService.AddDrinkAsync(
+            _newDrinkName,
+            _newDrinkPrice.Value,
+            _newDrinkUnitsPerPrice.Value,
+            _newDrinkKlipsPrice);
         _newDrinkName = string.Empty;
         _newDrinkPrice = null;
+        _newDrinkKlipsPrice = null;
         _newDrinkUnitsPerPrice = null;
         await LoadDrinksAsync();
     }
@@ -110,6 +123,7 @@ else
         _editingDrinkId = drink.Id;
         _editingDrinkName = drink.Name;
         _editingDrinkPrice = drink.Price;
+        _editingDrinkKlipsPrice = drink.KlipsPrice;
         _editingDrinkUnitsPerPrice = drink.UnitsPerPrice;
     }
 
@@ -118,6 +132,7 @@ else
         _editingDrinkId = null;
         _editingDrinkName = string.Empty;
         _editingDrinkPrice = 0;
+        _editingDrinkKlipsPrice = null;
         _editingDrinkUnitsPerPrice = 1;
     }
 
@@ -128,7 +143,12 @@ else
             return;
         }
 
-        await DrinkService.UpdateDrinkAsync(drink.Id, _editingDrinkName, _editingDrinkPrice, _editingDrinkUnitsPerPrice);
+        await DrinkService.UpdateDrinkAsync(
+            drink.Id,
+            _editingDrinkName,
+            _editingDrinkPrice,
+            _editingDrinkUnitsPerPrice,
+            _editingDrinkKlipsPrice);
         await LoadDrinksAsync();
         CancelDrinkEdit();
     }

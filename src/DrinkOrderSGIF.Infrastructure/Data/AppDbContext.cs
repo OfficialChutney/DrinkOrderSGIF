@@ -22,6 +22,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Price).IsRequired();
             entity.Property(e => e.UnitsPerPrice).IsRequired().HasDefaultValue(1);
+            entity.Property(e => e.KlipsPrice);
         });
 
         modelBuilder.Entity<Order>(entity =>

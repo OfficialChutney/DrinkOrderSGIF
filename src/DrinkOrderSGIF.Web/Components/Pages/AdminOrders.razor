@@ -38,16 +38,28 @@ else
                         <button class="order-button" @onclick="() => CompleteOrder(order.Id)">Ordre Gennemført</button>
                     </div>
                     <div class="order-items">
+                        @{
+                            var totals = GetOrderTotals(order);
+                        }
                         @foreach (var item in order.Items.OrderBy(i => i.DrinkName))
                         {
                             <div class="order-item-row">
                                 <span>@item.DrinkName</span>
                                 <span>@item.Quantity</span>
+                                <span>@GetItemPriceLabel(item)</span>
                             </div>
                         }
                         <div class="order-item-row">
-                            <strong>Total klips:</strong>
-                            <strong>@GetOrderTotal(order)</strong>
+                            <strong>Total i DKK (alt i DKK):</strong>
+                            <strong>@totals.DkkAll</strong>
+                        </div>
+                        <div class="order-item-row">
+                            <strong>Total i Klips:</strong>
+                            <strong>@totals.Klips</strong>
+                        </div>
+                        <div class="order-item-row">
+                            <strong>Obligatorisk DKK:</strong>
+                            <strong>@totals.MandatoryDkk</strong>
                         </div>
                     </div>
                 </div>
@@ -97,12 +109,31 @@ else
         var drinks = await DrinkService.GetAllDrinksAsync();
         _drinkPricingLookup = drinks
             .GroupBy(drink => drink.Id)
-            .ToDictionary(group => group.Key, group => new DrinkPricing(group.First().Price, group.First().UnitsPerPrice));
+            .ToDictionary(group => group.Key,
+                group => new DrinkPricing(group.First().Price, group.First().KlipsPrice, group.First().UnitsPerPrice));
     }
 
-    private int GetOrderTotal(OrderEntity order)
+    private string GetItemPriceLabel(OrderItem item)
     {
-        var total = 0;
+        if (!_drinkPricingLookup.TryGetValue(item.DrinkId, out var pricing))
+        {
+            return "Ukendt";
+        }
+
+        var label = $"{pricing.PriceDkk} DKK";
+        if (pricing.KlipsPrice.HasValue)
+        {
+            label = $"{label} / {pricing.KlipsPrice.Value} Klips";
+        }
+
+        return label;
+    }
+
+    private OrderTotals GetOrderTotals(OrderEntity order)
+    {
+        var totalDkkAll = 0;
+        var totalKlips = 0;
+        var mandatoryDkk = 0;
         foreach (var item in order.Items)
         {
             if (_drinkPricingLookup.TryGetValue(item.DrinkId, out var pricing))
@@ -112,14 +143,24 @@ else
                 {
                     increments += 1;
                 }
-                total += increments * pricing.Price;
+                var dkkTotal = increments * pricing.PriceDkk;
+                totalDkkAll += dkkTotal;
+                if (pricing.KlipsPrice.HasValue)
+                {
+                    totalKlips += increments * pricing.KlipsPrice.Value;
+                }
+                else
+                {
+                    mandatoryDkk += dkkTotal;
+                }
             }
         }
 
-        return total;
+        return new OrderTotals(totalKlips, totalDkkAll, mandatoryDkk);
     }
 
-    private sealed record DrinkPricing(int Price, int UnitsPerPrice);
+    private sealed record DrinkPricing(int PriceDkk, int? KlipsPrice, int UnitsPerPrice);
+    private sealed record OrderTotals(int Klips, int DkkAll, int MandatoryDkk);
 
     private async Task CompleteOrder(Guid orderId)
     {

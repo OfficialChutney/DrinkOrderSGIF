@@ -36,19 +36,28 @@ public sealed class OrderDraftState
         return _items.TryGetValue(drinkId, out var item) ? item.Price : 0;
     }
 
-    public int TotalPrice => _items.Values.Sum(item => item.TotalPrice);
+    public int TotalPrice => _items.Values.Sum(item => item.TotalPriceDkk);
 
-    public void Increment(Guid drinkId, string drinkName, int price, int unitsPerPrice)
+    public int TotalKlips => _items.Values
+        .Where(item => item.KlipsPrice.HasValue)
+        .Sum(item => item.TotalPriceKlips);
+
+    public int MandatoryDkk => _items.Values
+        .Where(item => !item.KlipsPrice.HasValue)
+        .Sum(item => item.TotalPriceDkk);
+
+    public void Increment(Guid drinkId, string drinkName, int price, int? klipsPrice, int unitsPerPrice)
     {
         if (_items.TryGetValue(drinkId, out var item))
         {
             item.IncrementCount += 1;
             item.Price = price;
+            item.KlipsPrice = klipsPrice;
             item.UnitsPerPrice = unitsPerPrice;
         }
         else
         {
-            _items[drinkId] = new DraftItem(drinkId, drinkName, price, unitsPerPrice, 1);
+            _items[drinkId] = new DraftItem(drinkId, drinkName, price, klipsPrice, unitsPerPrice, 1);
         }
     }
 
@@ -76,11 +85,12 @@ public sealed class OrderDraftState
 
 public sealed class DraftItem
 {
-    public DraftItem(Guid drinkId, string drinkName, int price, int unitsPerPrice, int incrementCount)
+    public DraftItem(Guid drinkId, string drinkName, int price, int? klipsPrice, int unitsPerPrice, int incrementCount)
     {
         DrinkId = drinkId;
         DrinkName = drinkName;
         Price = price;
+        KlipsPrice = klipsPrice;
         UnitsPerPrice = unitsPerPrice;
         IncrementCount = incrementCount;
     }
@@ -88,8 +98,10 @@ public sealed class DraftItem
     public Guid DrinkId { get; }
     public string DrinkName { get; }
     public int Price { get; set; }
+    public int? KlipsPrice { get; set; }
     public int UnitsPerPrice { get; set; }
     public int IncrementCount { get; set; }
     public int TotalUnits => IncrementCount * UnitsPerPrice;
-    public int TotalPrice => IncrementCount * Price;
+    public int TotalPriceDkk => IncrementCount * Price;
+    public int TotalPriceKlips => KlipsPrice.HasValue ? IncrementCount * KlipsPrice.Value : 0;
 }
