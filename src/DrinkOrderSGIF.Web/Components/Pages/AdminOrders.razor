@@ -45,8 +45,7 @@ else
                         {
                             <div class="order-item-row">
                                 <span>@item.DrinkName</span>
-                                <span>@item.Quantity</span>
-                                <span>@GetItemCurrencyLabel(item)</span>
+                                <span>@item.Quantity @GetItemCurrencyLabel(item)</span>
                             </div>
                         }
                         @if (totals.Klips > 0)
