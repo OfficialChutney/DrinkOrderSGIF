@@ -26,10 +26,15 @@ else
         {
             <div class="review-row">
                 <span>@item.DrinkName</span>
-                <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price DKK</span>
                 @if (item.KlipsPrice.HasValue)
                 {
-                    <span>/ @item.IncrementCount x @item.KlipsPrice.Value Klips</span>
+                    <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price DKK / @item.IncrementCount x @item.KlipsPrice.Value Klips</span>
+
+                }
+                else
+                {
+                    <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price DKK</span>
+
                 }
             </div>
         }
