@@ -24,7 +24,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Drink> AddDrinkAsync(string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
+    public async Task<Drink> AddDrinkAsync(string name, int price, int unitsPerPrice, decimal? klipsPrice, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -35,6 +35,11 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         if (price < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or higher.");
+        }
+
+        if (klipsPrice < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(klipsPrice), "Klips price must be zero or higher.");
         }
 
         if (unitsPerPrice < 1)
@@ -50,17 +55,25 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
             existing.IsActive = true;
             existing.Price = price;
             existing.UnitsPerPrice = unitsPerPrice;
+            existing.KlipsPrice = klipsPrice;
             await dbContext.SaveChangesAsync(cancellationToken);
             return existing;
         }
 
-        var drink = new Drink { Name = trimmed, Price = price, UnitsPerPrice = unitsPerPrice, IsActive = true };
+        var drink = new Drink
+        {
+            Name = trimmed,
+            Price = price,
+            UnitsPerPrice = unitsPerPrice,
+            KlipsPrice = klipsPrice,
+            IsActive = true
+        };
         dbContext.Drinks.Add(drink);
         await dbContext.SaveChangesAsync(cancellationToken);
         return drink;
     }
 
-    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, int unitsPerPrice, CancellationToken cancellationToken = default)
+    public async Task UpdateDrinkAsync(Guid drinkId, string name, int price, int unitsPerPrice, decimal? klipsPrice, CancellationToken cancellationToken = default)
     {
         var trimmed = name.Trim();
         if (string.IsNullOrWhiteSpace(trimmed))
@@ -71,6 +84,11 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         if (price < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or higher.");
+        }
+
+        if (klipsPrice < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(klipsPrice), "Klips price must be zero or higher.");
         }
 
         if (unitsPerPrice < 1)
@@ -87,6 +105,7 @@ public sealed class DrinkService(AppDbContext dbContext) : IDrinkService
         drink.Name = trimmed;
         drink.Price = price;
         drink.UnitsPerPrice = unitsPerPrice;
+        drink.KlipsPrice = klipsPrice;
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 

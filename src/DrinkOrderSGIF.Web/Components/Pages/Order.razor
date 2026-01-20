@@ -25,15 +25,21 @@ else
             @foreach (var drink in _drinks)
             {
                 var quantity = DraftState.GetQuantity(drink.Id);
-                var incrementCount = DraftState.GetIncrementCount(drink.Id);
                 <div class="drink-row">
                     <div>
                         <div class="drink-name">@drink.Name</div>
-                        <div class="order-subtitle">Pris: @drink.Price Klip(s) - @drink.UnitsPerPrice pr. pris</div>
+                        <div class="order-subtitle">
+                            Pris: @drink.Price DKK
+                            @if (drink.KlipsPrice.HasValue)
+                            {
+                                <span>/ @($"{drink.KlipsPrice.Value:0.##}") Klips</span>
+                            }
+                            - @drink.UnitsPerPrice pr. pris
+                        </div>
                     </div>
                     <div class="drink-controls">
                         <button class="qty-button" @onclick="() => Decrement(drink.Id)">-</button>
-                        <span class="qty-value">@quantity (@incrementCount Klip(s))</span>
+                        <span class="qty-value">@quantity</span>
                         <button class="qty-button" @onclick="() => Increment(drink)">+</button>
                     </div>
                 </div>
@@ -42,7 +48,9 @@ else
 
         <div class="order-actions">
             <span>Totale drinks: @TotalItems</span>
-            <span>Totale: @DraftState.TotalPrice Klip(s)</span>
+            <span>Totale i DKK (alt i DKK): @TotalDkkAll</span>
+            <span>Totale i Klips: @TotalKlips</span>
+            <span>Obligatorisk DKK: @MandatoryDkk</span>
             <button class="order-button" disabled="@(_team is null || TotalItems == 0)" @onclick="GoToReview">
                 Se samlet ordrer
             </button>
@@ -58,6 +66,9 @@ else
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
 
     private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
+    private int TotalDkkAll => DraftState.TotalPrice;
+    private string TotalKlips => $"{DraftState.TotalKlips:0.##}";
+    private int MandatoryDkk => DraftState.MandatoryDkk;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -75,7 +86,7 @@ else
 
     private void Increment(Drink drink)
     {
-        DraftState.Increment(drink.Id, drink.Name, drink.Price, drink.UnitsPerPrice);
+        DraftState.Increment(drink.Id, drink.Name, drink.Price, drink.KlipsPrice, drink.UnitsPerPrice);
     }
 
     private void Decrement(Guid drinkId)

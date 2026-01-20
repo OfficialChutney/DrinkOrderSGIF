@@ -26,14 +26,20 @@ else
         {
             <div class="review-row">
                 <span>@item.DrinkName</span>
-                <span>@item.TotalUnits enheder - @item.IncrementCount x @item.Price Klip(s)</span>
+                <span>@item.TotalUnits enheder - @item.TotalPriceDkk DKK</span>
+                @if (item.KlipsPrice.HasValue)
+                {
+                    <span>/ @($"{Math.Ceiling(item.TotalPriceKlips):0}") Klips</span>
+                }
             </div>
         }
     </div>
 
     <div class="order-actions">
         <span>Totale drinks: @TotalItems</span>
-        <span>Totale: @DraftState.TotalPrice Klip(s)</span>
+        <span>Totale i DKK (alt i DKK): @TotalDkkAll</span>
+        <span>Totale i Klips: @TotalKlips</span>
+        <span>Obligatorisk DKK: @MandatoryDkk</span>
         <button class="order-button" @onclick="PlaceOrder">Placér Order</button>
     </div>
 
@@ -48,6 +54,9 @@ else
     private string? _error;
 
     private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
+    private int TotalDkkAll => DraftState.TotalPrice;
+    private string TotalKlips => $"{Math.Ceiling(DraftState.TotalKlips):0}";
+    private int MandatoryDkk => DraftState.MandatoryDkk;
 
     private async Task PlaceOrder()
     {
