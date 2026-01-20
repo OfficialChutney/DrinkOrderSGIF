@@ -5,6 +5,8 @@
 @inject OrderDraftState DraftState
 @inject NavigationManager Navigation
 
+@using System.Globalization
+
 <PageTitle>Bestil Drinks</PageTitle>
 
 @if (_team is null)
@@ -32,9 +34,8 @@ else
                             Pris: @drink.Price DKK
                             @if (drink.KlipsPrice.HasValue)
                             {
-                                <span>/ @($"{drink.KlipsPrice.Value:0.##}") Klips</span>
+                                <span>/ @FormatKlips(drink.KlipsPrice.Value) Klips</span>
                             }
-                            - @drink.UnitsPerPrice pr. pris
                         </div>
                     </div>
                     <div class="drink-controls">
@@ -67,7 +68,7 @@ else
 
     private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
     private int TotalDkkAll => DraftState.TotalPrice;
-    private string TotalKlips => $"{DraftState.TotalKlips:0.##}";
+    private string TotalKlips => FormatKlips(DraftState.TotalKlips);
     private int MandatoryDkk => DraftState.MandatoryDkk;
 
     protected override async Task OnParametersSetAsync()
@@ -86,7 +87,7 @@ else
 
     private void Increment(Drink drink)
     {
-        DraftState.Increment(drink.Id, drink.Name, drink.Price, drink.KlipsPrice, drink.UnitsPerPrice);
+        DraftState.Increment(drink.Id, drink.Name, drink.Price, drink.KlipsPrice);
     }
 
     private void Decrement(Guid drinkId)
@@ -97,5 +98,10 @@ else
     private void GoToReview()
     {
         Navigation.NavigateTo("/order/review");
+    }
+
+    private static string FormatKlips(decimal value)
+    {
+        return value.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("da-DK"));
     }
 }

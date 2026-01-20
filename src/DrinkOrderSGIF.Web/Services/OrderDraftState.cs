@@ -41,18 +41,17 @@ public sealed class OrderDraftState
         .Where(item => !item.KlipsPrice.HasValue)
         .Sum(item => item.TotalPriceDkk);
 
-    public void Increment(Guid drinkId, string drinkName, int price, decimal? klipsPrice, int unitsPerPrice)
+    public void Increment(Guid drinkId, string drinkName, int price, decimal? klipsPrice)
     {
         if (_items.TryGetValue(drinkId, out var item))
         {
             item.Quantity += 1;
             item.Price = price;
             item.KlipsPrice = klipsPrice;
-            item.UnitsPerPrice = unitsPerPrice;
         }
         else
         {
-            _items[drinkId] = new DraftItem(drinkId, drinkName, price, klipsPrice, unitsPerPrice, 1);
+            _items[drinkId] = new DraftItem(drinkId, drinkName, price, klipsPrice, 1);
         }
     }
 
@@ -80,13 +79,12 @@ public sealed class OrderDraftState
 
 public sealed class DraftItem
 {
-    public DraftItem(Guid drinkId, string drinkName, int price, decimal? klipsPrice, int unitsPerPrice, int quantity)
+    public DraftItem(Guid drinkId, string drinkName, int price, decimal? klipsPrice, int quantity)
     {
         DrinkId = drinkId;
         DrinkName = drinkName;
         Price = price;
         KlipsPrice = klipsPrice;
-        UnitsPerPrice = unitsPerPrice;
         Quantity = quantity;
     }
 
@@ -94,25 +92,8 @@ public sealed class DraftItem
     public string DrinkName { get; }
     public int Price { get; set; }
     public decimal? KlipsPrice { get; set; }
-    public int UnitsPerPrice { get; set; }
     public int Quantity { get; set; }
     public int TotalUnits => Quantity;
-    public int TotalPriceDkk => GetIncrementCount() * Price;
-    public decimal TotalPriceKlips => KlipsPrice.HasValue ? GetIncrementCount() * KlipsPrice.Value : 0;
-
-    private int GetIncrementCount()
-    {
-        if (UnitsPerPrice <= 0)
-        {
-            return 0;
-        }
-
-        var increments = Quantity / UnitsPerPrice;
-        if (Quantity % UnitsPerPrice != 0)
-        {
-            increments += 1;
-        }
-
-        return increments;
-    }
+    public int TotalPriceDkk => Quantity * Price;
+    public decimal TotalPriceKlips => KlipsPrice.HasValue ? Quantity * KlipsPrice.Value : 0;
 }

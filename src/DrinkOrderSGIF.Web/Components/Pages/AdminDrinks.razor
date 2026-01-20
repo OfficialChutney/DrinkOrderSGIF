@@ -3,6 +3,8 @@
 
 @inject IDrinkService DrinkService
 
+@using System.Globalization
+
 <PageTitle>Administrer drinks</PageTitle>
 
 @if (!IsAuthorized)
@@ -15,9 +17,8 @@ else
 
     <div class="admin-form">
         <input placeholder="Nyt drinknavn" @bind="_newDrinkName" />
-        <input type="number" min="0" placeholder="Pris (DKK)" @bind="_newDrinkPrice" />
-        <input type="number" min="0" step="0.01" placeholder="Pris (Klips, valgfri)" @bind="_newDrinkKlipsPrice" />
-        <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_newDrinkUnitsPerPrice" />
+        <input type="number" min="0" step="1" placeholder="Pris (DKK)" @bind="_newDrinkPrice" />
+        <input type="text" inputmode="decimal" placeholder="Pris (Klips, valgfri)" @bind="_newDrinkKlipsPriceInput" />
         <button class="order-button" @onclick="AddDrink">Tilføj drink</button>
     </div>
 
@@ -35,9 +36,8 @@ else
                         @if (_editingDrinkId == drink.Id)
                         {
                             <input placeholder="Drinknavn" @bind="_editingDrinkName" />
-                            <input type="number" min="0" placeholder="Pris (DKK)" @bind="_editingDrinkPrice" />
-                            <input type="number" min="0" step="0.01" placeholder="Pris (Klips, valgfri)" @bind="_editingDrinkKlipsPrice" />
-                            <input type="number" min="1" placeholder="Enheder pr. pris" @bind="_editingDrinkUnitsPerPrice" />
+                            <input type="number" min="0" step="1" placeholder="Pris (DKK)" @bind="_editingDrinkPrice" />
+                            <input type="text" inputmode="decimal" placeholder="Pris (Klips, valgfri)" @bind="_editingDrinkKlipsPriceInput" />
                         }
                         else
                         {
@@ -45,9 +45,8 @@ else
                             <span class="status-tag">@drink.Price DKK</span>
                             @if (drink.KlipsPrice.HasValue)
                             {
-                                <span class="status-tag">@($"{drink.KlipsPrice.Value:0.##}") Klips</span>
+                                <span class="status-tag">@FormatKlips(drink.KlipsPrice.Value) Klips</span>
                             }
-                            <span class="status-tag">@drink.UnitsPerPrice pr. pris</span>
                             <span class="status-tag">@((drink.IsActive) ? "Aktiv" : "Inaktiv")</span>
                         }
                     </div>
@@ -74,14 +73,12 @@ else
 @code {
     private string _newDrinkName = string.Empty;
     private int? _newDrinkPrice;
-    private decimal? _newDrinkKlipsPrice;
-    private int? _newDrinkUnitsPerPrice;
+    private string _newDrinkKlipsPriceInput = string.Empty;
     private IReadOnlyList<Drink> _drinks = Array.Empty<Drink>();
     private Guid? _editingDrinkId;
     private string _editingDrinkName = string.Empty;
     private int _editingDrinkPrice;
-    private decimal? _editingDrinkKlipsPrice;
-    private int _editingDrinkUnitsPerPrice = 1;
+    private string _editingDrinkKlipsPriceInput = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -100,8 +97,12 @@ else
     private async Task AddDrink()
     {
         if (string.IsNullOrWhiteSpace(_newDrinkName)
-            || _newDrinkPrice is null
-            || _newDrinkUnitsPerPrice is null)
+            || _newDrinkPrice is null)
+        {
+            return;
+        }
+
+        if (!TryParseKlipsPrice(_newDrinkKlipsPriceInput, out var klipsPrice))
         {
             return;
         }
@@ -109,12 +110,10 @@ else
         await DrinkService.AddDrinkAsync(
             _newDrinkName,
             _newDrinkPrice.Value,
-            _newDrinkUnitsPerPrice.Value,
-            _newDrinkKlipsPrice);
+            klipsPrice);
         _newDrinkName = string.Empty;
         _newDrinkPrice = null;
-        _newDrinkKlipsPrice = null;
-        _newDrinkUnitsPerPrice = null;
+        _newDrinkKlipsPriceInput = string.Empty;
         await LoadDrinksAsync();
     }
 
@@ -123,8 +122,7 @@ else
         _editingDrinkId = drink.Id;
         _editingDrinkName = drink.Name;
         _editingDrinkPrice = drink.Price;
-        _editingDrinkKlipsPrice = drink.KlipsPrice;
-        _editingDrinkUnitsPerPrice = drink.UnitsPerPrice;
+        _editingDrinkKlipsPriceInput = drink.KlipsPrice.HasValue ? FormatKlips(drink.KlipsPrice.Value) : string.Empty;
     }
 
     private void CancelDrinkEdit()
@@ -132,8 +130,7 @@ else
         _editingDrinkId = null;
         _editingDrinkName = string.Empty;
         _editingDrinkPrice = 0;
-        _editingDrinkKlipsPrice = null;
-        _editingDrinkUnitsPerPrice = 1;
+        _editingDrinkKlipsPriceInput = string.Empty;
     }
 
     private async Task SaveDrinkEdit(Drink drink)
@@ -143,12 +140,16 @@ else
             return;
         }
 
+        if (!TryParseKlipsPrice(_editingDrinkKlipsPriceInput, out var klipsPrice))
+        {
+            return;
+        }
+
         await DrinkService.UpdateDrinkAsync(
             drink.Id,
             _editingDrinkName,
             _editingDrinkPrice,
-            _editingDrinkUnitsPerPrice,
-            _editingDrinkKlipsPrice);
+            klipsPrice);
         await LoadDrinksAsync();
         CancelDrinkEdit();
     }
@@ -157,5 +158,33 @@ else
     {
         await DrinkService.SetDrinkActiveAsync(drink.Id, !drink.IsActive);
         await LoadDrinksAsync();
+    }
+
+    private static bool TryParseKlipsPrice(string? input, out decimal? value)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            value = null;
+            return true;
+        }
+
+        var normalized = input.Replace(',', '.');
+        if (decimal.TryParse(
+                normalized,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    private static string FormatKlips(decimal value)
+    {
+        return value.ToString("0.##", CultureInfo.GetCultureInfo("da-DK"));
     }
 }

@@ -4,6 +4,8 @@
 @inject OrderDraftState DraftState
 @inject NavigationManager Navigation
 
+@using System.Globalization
+
 <PageTitle>Gennemgå Ordre</PageTitle>
 
 @if (_submitted)
@@ -29,7 +31,7 @@ else
                 <span>@item.TotalUnits enheder - @item.TotalPriceDkk DKK</span>
                 @if (item.KlipsPrice.HasValue)
                 {
-                    <span>/ @($"{Math.Ceiling(item.TotalPriceKlips):0}") Klips</span>
+                    <span>/ @FormatKlips(Math.Ceiling(item.TotalPriceKlips)) Klips</span>
                 }
             </div>
         }
@@ -55,7 +57,7 @@ else
 
     private int TotalItems => DraftState.Items.Sum(item => item.TotalUnits);
     private int TotalDkkAll => DraftState.TotalPrice;
-    private string TotalKlips => $"{Math.Ceiling(DraftState.TotalKlips):0}";
+    private string TotalKlips => FormatKlips(Math.Ceiling(DraftState.TotalKlips));
     private int MandatoryDkk => DraftState.MandatoryDkk;
 
     private async Task PlaceOrder()
@@ -86,5 +88,10 @@ else
     {
         DraftState.Clear();
         Navigation.NavigateTo("/");
+    }
+
+    private static string FormatKlips(decimal value)
+    {
+        return value.ToString("0", System.Globalization.CultureInfo.GetCultureInfo("da-DK"));
     }
 }

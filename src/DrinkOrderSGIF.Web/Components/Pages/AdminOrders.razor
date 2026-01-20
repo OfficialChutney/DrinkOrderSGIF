@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 
 @using Microsoft.AspNetCore.SignalR.Client
+@using System.Globalization
 
 <PageTitle>Ordrer</PageTitle>
 
@@ -55,7 +56,7 @@ else
                         </div>
                         <div class="order-item-row">
                             <strong>Total i Klips:</strong>
-                            <strong>@($"{Math.Ceiling(totals.Klips):0}")</strong>
+                            <strong>@FormatKlips(Math.Ceiling(totals.Klips))</strong>
                         </div>
                         <div class="order-item-row">
                             <strong>Obligatorisk DKK:</strong>
@@ -110,7 +111,7 @@ else
         _drinkPricingLookup = drinks
             .GroupBy(drink => drink.Id)
             .ToDictionary(group => group.Key,
-                group => new DrinkPricing(group.First().Price, group.First().KlipsPrice, group.First().UnitsPerPrice));
+                group => new DrinkPricing(group.First().Price, group.First().KlipsPrice));
     }
 
     private string GetItemPriceLabel(OrderItem item)
@@ -120,17 +121,11 @@ else
             return "Ukendt";
         }
 
-        var increments = item.Quantity / Math.Max(1, pricing.UnitsPerPrice);
-        if (item.Quantity % Math.Max(1, pricing.UnitsPerPrice) != 0)
-        {
-            increments += 1;
-        }
-
-        var label = $"{increments * pricing.PriceDkk} DKK";
+        var label = $"{item.Quantity * pricing.PriceDkk} DKK";
         if (pricing.KlipsPrice.HasValue)
         {
-            var klipsTotal = increments * pricing.KlipsPrice.Value;
-            label = $"{label} / {Math.Ceiling(klipsTotal):0} Klips";
+            var klipsTotal = item.Quantity * pricing.KlipsPrice.Value;
+            label = $"{label} / {FormatKlips(Math.Ceiling(klipsTotal))} Klips";
         }
 
         return label;
@@ -145,16 +140,11 @@ else
         {
             if (_drinkPricingLookup.TryGetValue(item.DrinkId, out var pricing))
             {
-                var increments = item.Quantity / Math.Max(1, pricing.UnitsPerPrice);
-                if (item.Quantity % Math.Max(1, pricing.UnitsPerPrice) != 0)
-                {
-                    increments += 1;
-                }
-                var dkkTotal = increments * pricing.PriceDkk;
+                var dkkTotal = item.Quantity * pricing.PriceDkk;
                 totalDkkAll += dkkTotal;
                 if (pricing.KlipsPrice.HasValue)
                 {
-                    totalKlips += increments * pricing.KlipsPrice.Value;
+                    totalKlips += item.Quantity * pricing.KlipsPrice.Value;
                 }
                 else
                 {
@@ -166,8 +156,13 @@ else
         return new OrderTotals(totalKlips, totalDkkAll, mandatoryDkk);
     }
 
-    private sealed record DrinkPricing(int PriceDkk, decimal? KlipsPrice, int UnitsPerPrice);
+    private sealed record DrinkPricing(int PriceDkk, decimal? KlipsPrice);
     private sealed record OrderTotals(decimal Klips, int DkkAll, int MandatoryDkk);
+
+    private static string FormatKlips(decimal value)
+    {
+        return value.ToString("0", CultureInfo.GetCultureInfo("da-DK"));
+    }
 
     private async Task CompleteOrder(Guid orderId)
     {
